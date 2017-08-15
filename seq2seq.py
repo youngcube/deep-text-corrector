@@ -69,8 +69,8 @@ from tensorflow.python.ops import control_flow_ops
 from tensorflow.python.ops import embedding_ops
 from tensorflow.python.ops import math_ops
 from tensorflow.python.ops import nn_ops
-from tensorflow.python.ops import rnn
-from tensorflow.python.ops import rnn_cell
+from tensorflow.contrib.rnn.python.ops import rnn
+from tensorflow.contrib.rnn.python.ops import rnn_cell
 from tensorflow.python.ops import variable_scope
 from tensorflow.python.util import nest
 
@@ -174,7 +174,7 @@ def basic_rnn_seq2seq(
           It is a 2D Tensor of shape [batch_size x cell.state_size].
     """
     with variable_scope.variable_scope(scope or "basic_rnn_seq2seq"):
-        _, enc_state = rnn.rnn(cell, encoder_inputs, dtype=dtype)
+        _, enc_state = rnn.contrib_rnn.static_rnn(cell, encoder_inputs, dtype=dtype)
         return rnn_decoder(decoder_inputs, enc_state, cell)
 
 
@@ -206,7 +206,7 @@ def tied_rnn_seq2seq(encoder_inputs, decoder_inputs, cell,
     """
     with variable_scope.variable_scope("combined_tied_rnn_seq2seq"):
         scope = scope or "tied_rnn_seq2seq"
-        _, enc_state = rnn.rnn(
+        _, enc_state = rnn.contrib_rnn.static_rnn(
             cell, encoder_inputs, dtype=dtype, scope=scope)
         variable_scope.get_variable_scope().reuse_variables()
         return rnn_decoder(decoder_inputs, enc_state, cell,
@@ -338,14 +338,14 @@ def embedding_rnn_seq2seq(encoder_inputs,
             dtype = scope.dtype
 
         # Encoder.
-        encoder_cell = rnn_cell.EmbeddingWrapper(
+        encoder_cell = rnn_cell.core_rnn_cell.EmbeddingWrapper(
             cell, embedding_classes=num_encoder_symbols,
             embedding_size=embedding_size)
-        _, encoder_state = rnn.rnn(encoder_cell, encoder_inputs, dtype=dtype)
+        _, encoder_state = rnn.contrib_rnn.static_rnn(encoder_cell, encoder_inputs, dtype=dtype)
 
         # Decoder.
         if output_projection is None:
-            cell = rnn_cell.OutputProjectionWrapper(cell, num_decoder_symbols)
+            cell = rnn_cell.core_rnn_cell.OutputProjectionWrapper(cell, num_decoder_symbols)
 
         if isinstance(feed_previous, bool):
             return embedding_rnn_decoder(
@@ -461,7 +461,7 @@ def embedding_tied_rnn_seq2seq(encoder_inputs,
         if num_decoder_symbols is not None:
             output_symbols = num_decoder_symbols
         if output_projection is None:
-            cell = rnn_cell.OutputProjectionWrapper(cell, output_symbols)
+            cell = rnn_cell.core_rnn_cell.OutputProjectionWrapper(cell, output_symbols)
 
         if isinstance(feed_previous, bool):
             loop_function = _extract_argmax_and_embed(
@@ -628,7 +628,7 @@ def attention_decoder(decoder_inputs,
 
         outputs = []
         prev = None
-        batch_attn_size = array_ops.pack([batch_size, attn_size])
+        batch_attn_size = array_ops.stack([batch_size, attn_size])
         attns = [array_ops.zeros(batch_attn_size, dtype=dtype)
                  for _ in xrange(num_heads)]
         for a in attns:  # Ensure the second shape of attention vectors is set.
@@ -814,10 +814,10 @@ def embedding_attention_seq2seq(encoder_inputs,
                     scope or "embedding_attention_seq2seq", dtype=dtype) as scope:
         dtype = scope.dtype
         # Encoder.
-        encoder_cell = rnn_cell.EmbeddingWrapper(
+        encoder_cell = rnn_cell.core_rnn_cell.EmbeddingWrapper(
             cell, embedding_classes=num_encoder_symbols,
             embedding_size=embedding_size)
-        encoder_outputs, encoder_state = rnn.rnn(
+        encoder_outputs, encoder_state = rnn.contrib_rnn.static_rnn(
             encoder_cell, encoder_inputs, dtype=dtype)
 
         # First calculate a concatenation of encoder outputs to put attention on.
@@ -828,7 +828,7 @@ def embedding_attention_seq2seq(encoder_inputs,
         # Decoder.
         output_size = None
         if output_projection is None:
-            cell = rnn_cell.OutputProjectionWrapper(cell, num_decoder_symbols)
+            cell = rnn_cell.core_rnn_cell.OutputProjectionWrapper(cell, num_decoder_symbols)
             output_size = num_decoder_symbols
 
         if isinstance(feed_previous, bool):
@@ -936,10 +936,10 @@ def one2many_rnn_seq2seq(encoder_inputs,
         dtype = scope.dtype
 
         # Encoder.
-        encoder_cell = rnn_cell.EmbeddingWrapper(
+        encoder_cell = rnn_cell.core_rnn_cell.EmbeddingWrapper(
             cell, embedding_classes=num_encoder_symbols,
             embedding_size=embedding_size)
-        _, encoder_state = rnn.rnn(encoder_cell, encoder_inputs, dtype=dtype)
+        _, encoder_state = rnn.contrib_rnn.static_rnn(encoder_cell, encoder_inputs, dtype=dtype)
 
         # Decoder.
         for name, decoder_inputs in decoder_inputs_dict.items():
@@ -947,7 +947,7 @@ def one2many_rnn_seq2seq(encoder_inputs,
 
             with variable_scope.variable_scope("one2many_decoder_" + str(
                     name)) as scope:
-                decoder_cell = rnn_cell.OutputProjectionWrapper(cell,
+                decoder_cell = rnn_cell.core_rnn_cell.OutputProjectionWrapper(cell,
                                                                 num_decoder_symbols)
                 if isinstance(feed_previous, bool):
                     outputs, state = embedding_rnn_decoder(

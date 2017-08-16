@@ -32,7 +32,7 @@ from text_corrector_models import TextCorrectorModel
 tf.app.flags.DEFINE_string("config", "TestConfig", "Name of config to use.")
 tf.app.flags.DEFINE_string("data_reader_type", "MovieDialogReader",
                            "Type of data reader to use.")
-tf.app.flags.DEFINE_string("train_path", "movie_dialog_model/checkpoint", "Training data path.")
+tf.app.flags.DEFINE_string("train_path", "train", "Training data path.")
 tf.app.flags.DEFINE_string("val_path", "val", "Validation data path.")
 tf.app.flags.DEFINE_string("test_path", "test", "Testing data path.")
 tf.app.flags.DEFINE_string("model_path", "model", "Path where the model is "

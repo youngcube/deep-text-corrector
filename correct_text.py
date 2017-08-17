@@ -101,7 +101,7 @@ class DefaultMovieDialogConfig():
     max_vocabulary_size = 2000
 
     size = 512
-    num_layers = 4
+    num_layers = 8
     max_gradient_norm = 5.0
     batch_size = 64
     learning_rate = 0.5

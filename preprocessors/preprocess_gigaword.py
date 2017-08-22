@@ -1,75 +1,73 @@
 #!/usr/bin/python3.6
 # -*- coding: utf-8 -*-
 # import tensorflow as tf
-# import nltk
+
 
 from html.parser import HTMLParser
 from html.entities import name2codepoint
+import os
+import nltk
+import sys
+import getopt
 
-# tf.app.flags.DEFINE_string("raw_data", "", "Raw data path")
-# tf.app.flags.DEFINE_string("out_file", "", "File to write preprocessed data "
-#                                            "to.")
 
-# FLAGS = tf.app.flags.FLAGS
+class GigaWordParser(HTMLParser):
+    cacheText = ""
+    isTag = False
+    f = None
 
-class MyHTMLParser(HTMLParser):
-    insideP = False
-
+    def __init__(self, file_name):
+        super().__init__()
+        self.file_name = file_name
+        self.f = open(file_name, "w+")
 
     def handle_starttag(self, tag, attrs):
-        # print('<%s>' % tag)
-        if tag == 'p':
-            # print(tag)
-            self.insideP = True
-
+        if tag.lower() == 'p':
+            self.isTag = True
 
     def handle_endtag(self, tag):
-        # print('</%s>' % tag)
-        if tag == 'p':
-            self.insideP = False
-
-    def handle_startendtag(self, tag, attrs):
-        pass
-        # print('<%s/>' % tag)
+        if tag.lower() == 'p':
+            self.isTag = False
+            self.cacheText = self.cacheText + '\n'
+            self.f.write(self.cacheText + "\n")
+            print(self.cacheText)
+            self.cacheText = ''
 
     def handle_data(self, data):
-        if self.insideP is True:
-            print(data)
+        if self.isTag is True:
+            data = data.replace('\n',' ')
+            data = " ".join(nltk.word_tokenize(data))
+            self.cacheText = self.cacheText + data
 
 
-    def handle_comment(self, data):
-        pass
-        # print('<!--', data, '-->')
 
-    def handle_entityref(self, name):
-        pass
-        # print('&%s;' % name)
-
-    def handle_charref(self, name):
-        pass
-        # print('&#%s;' % name)
-    def feed(self, data):
-        return data
+def loopForFile(rootDir,saveTxtDir):
+    parser = GigaWordParser(saveTxtDir)
+    list_dirs = os.walk(rootDir)
+    for root, dirs, files in list_dirs:
+        for f in files:
+            filename = os.path.join(root, f)
+            f = open(filename, errors='ignore')
+            parser.feed(f.read())
 
 
-# def useFile(raw_data_para,out_file_para):
-#     parser = MyHTMLParser()
-#     with open(raw_data_para, encoding='utf-8') as raw_data, \
-#             open(out_file_para, "w") as out:
-#         for line in raw_data:
-#             parts = line.split(" +++$+++ ")
-#             dialog_line = parts[-1]
-#             s = dialog_line.strip().lower()
-#             p =  parser.feed(s)
-#             # out.write(p)
-#             # preprocessed_line = " ".join(nltk.word_tokenize(s))
-#             # out.write(s + "\n")
-#
-# useFile('/Users/eusoft/Desktop/nyt_eng_201012','/Users/eusoft/Desktop/1.txt')
+def main(argv):
+    dir_file = ''
+    txt_file = ''
+    try:
+        opts, args = getopt.getopt(argv,"d:t:",["dir_file=","txt_file="])
+    except getopt.GetoptError:
+        print('error')
+        sys.exit(2)
 
-parser = MyHTMLParser()
-f = open('/Users/eusoft/Desktop/nyt_eng_201012',encoding='utf8')
-s = f.read()
-parser.feed(s)
+    for opt, arg in opts:
+        if opt in ("-d", "--dir_file"):
+            dir_file = arg
+        elif opt in ("-t", "--txt_file"):
+            txt_file = arg
 
+    loopForFile(dir_file,txt_file)
+
+if __name__ == '__main__':
+    main(sys.argv[1:])
 

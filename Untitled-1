@@ -1,0 +1,50 @@
+python add_spelling_noise.py --raw_data preprocessed_movie_lines.txt \
+                                                 --out_file noise1.txt
+
+python correct_text.py --test_path ./test.txt \
+                       --train_path ./input/data/movie_dialog_train.txt \
+                       --config DefaultMovieDialogConfig \
+                       --data_reader_type MovieDialogReader \
+                       --input_path ./input \
+                       --decode     
+
+python correct_text.py --train_path input/data/movie_dialog_train.txt \
+                       --val_path data/movie_dialog_val.txt \
+                       --config DefaultMovieDialogConfig \
+                       --data_reader_type MovieDialogReader \
+                       --model_path movie_dialog_model \
+
+python correct_text.py --num_steps 200000 \
+                       --train_path ./input/data/movie_dialog_train.txt \
+                       --val_path ./input/data/movie_dialog_val.txt \
+                       --config DefaultMovieDialogConfig \
+                       --data_reader_type MovieDialogReader \
+                       --output_path ./output   
+
+// 训练参数
+python correct_text.py --num_steps 20000 \
+                       --train_path ./input/data/movie_dialog_train.txt \
+                       --val_path ./input/data/movie_dialog_val.txt \
+                       --config DefaultMovieDialogConfig \
+                       --data_reader_type MovieDialogReader \
+                       --output_path ./output   
+
+// 测试参数
+python correct_text.py --test_path ./test.txt \
+                       --train_path ./input/data/movie_dialog_train.txt \
+                       --config DefaultMovieDialogConfig \
+                       --data_reader_type MovieDialogReader \
+                       --input_path ./output \
+                       --decode 
+
+
+Not found: Key embedding_attention_seq2seq/embedding_attention_decoder/attention_decoder/AttnOutputProjection/biases not found in checkpoint                                        
+                                                     
+
+pip install --upgrade https://storage.googleapis.com/tensorflow/mac/cpu/tensorflow-1.0.1-py3-none-any.whl
+
+
+floyd run --gpu --env tensorflow-0.12:py2 --data floydhub/datasets/deep-text-corrector/1 "python correct_text.py --num_steps 1000 --train_path /input/data/movie_dialog_train.txt --val_path /input/data/movie_dialog_val.txt --config DefaultMovieDialogConfig --data_reader_type MovieDialogReader --output_path /output"
+
+
+floyd run --env tensorflow-0.12:py2 --data floydhub/deep-text-corrector/23/output "python correct_text.py --train_path /input/data/movie_dialog_train.txt --test_path test.txt --config DefaultMovieDialogConfig --data_reader_type MovieDialogReader --input_path /input --decode"                                                         

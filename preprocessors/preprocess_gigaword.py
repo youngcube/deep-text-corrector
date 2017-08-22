@@ -6,7 +6,7 @@
 from html.parser import HTMLParser
 from html.entities import name2codepoint
 import os
-import nltk
+# import nltk
 import sys
 import getopt
 
@@ -36,7 +36,7 @@ class GigaWordParser(HTMLParser):
     def handle_data(self, data):
         if self.isTag is True:
             data = data.replace('\n',' ')
-            data = " ".join(nltk.word_tokenize(data))
+            # data = " ".join(nltk.word_tokenize(data))
             self.cacheText = self.cacheText + data
 
 

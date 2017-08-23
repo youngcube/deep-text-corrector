@@ -98,7 +98,7 @@ class DefaultMovieDialogConfig():
 
     # The OOV resolution scheme used in decode() allows us to use a much smaller
     # vocabulary.
-    max_vocabulary_size = 10000
+    max_vocabulary_size = 5000
 
     size = 512
     num_layers = 8

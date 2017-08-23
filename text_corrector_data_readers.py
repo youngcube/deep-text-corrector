@@ -1,6 +1,10 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+from numpy.random import choice as random_choice, randint as random_randint, rand
+MAX_INPUT_LEN = 40
+AMOUNT_OF_NOISE = 0.2 / MAX_INPUT_LEN
+CHARS = list("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ .")
 
 import random
 
@@ -66,10 +70,12 @@ class MovieDialogReader(DataReader):
 
     UNKNOWN_TOKEN = "UNK"
 
-    DROPOUT_TOKENS = {"a", "an", "the", "'ll", "'s", "'m", "'ve"}  # Add "to"
+    DROPOUT_TOKENS = {"a", "an", "the", "'ll", "'s", "'m", "'ve", "to"}
 
     REPLACEMENTS = {"there": "their", "their": "there", "then": "than",
-                    "than": "then"}
+                    "than": "then", "is": "was", "was": "is","would": "may",
+                    "who": "who are", "shown": "showed", "outweights": "out-weigh",
+                    "internet": "the Internet"}
     # Add: "be":"to"
 
     def __init__(self, config, train_path=None, token_to_id=None,
@@ -83,8 +89,31 @@ class MovieDialogReader(DataReader):
 
         self.dropout_prob = dropout_prob
         self.replacement_prob = replacement_prob
-
         self.UNKNOWN_ID = self.token_to_id[MovieDialogReader.UNKNOWN_TOKEN]
+
+
+    def add_noise_to_string(self, a_string,amount_of_noises):
+        """Add some artificial spelling mistakes to the string"""
+        if rand() < amount_of_noises * len(a_string):
+            # Replace a character with a random character
+            random_char_position = random_randint(len(a_string))
+            a_string = a_string[:random_char_position] + random_choice(CHARS[:-1]) + a_string[random_char_position + 1:]
+        if rand() < amount_of_noises * len(a_string):
+            # Delete a character
+            random_char_position = random_randint(len(a_string))
+            a_string = a_string[:random_char_position] + a_string[random_char_position + 1:]
+        if len(a_string) < MAX_INPUT_LEN and rand() < amount_of_noises * len(a_string):
+            # Add a random character
+            random_char_position = random_randint(len(a_string))
+            a_string = a_string[:random_char_position] + random_choice(CHARS[:-1]) + a_string[random_char_position:]
+        if rand() < amount_of_noises * len(a_string):
+            # Transpose 2 characters
+            random_char_position = random_randint(len(a_string) - 1)
+            a_string = (
+            a_string[:random_char_position] + a_string[random_char_position + 1] + a_string[random_char_position] +
+            a_string[random_char_position + 2:])
+        return a_string
+
 
     def read_samples_by_string(self, path):
         for tokens in self.read_tokens(path):
@@ -103,6 +132,7 @@ class MovieDialogReader(DataReader):
                 if replace_token:
                     source.append(MovieDialogReader.REPLACEMENTS[token])
                 elif not dropout_token:
+                    token = self.add_noise_to_string(token, 5)
                     source.append(token)
 
             yield source, target

@@ -1,7 +1,5 @@
 #!/usr/bin/python3.6
 # -*- coding: utf-8 -*-
-# import tensorflow as tf
-
 
 from html.parser import HTMLParser
 from html.entities import name2codepoint

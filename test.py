@@ -12,8 +12,9 @@ def split(origin, train, val):
             break
         count += buffer.count('\n')
 
-    train_count = count * 0.9
-    val_count = count - train_count
+    percent = count * 0.15
+    train_count = percent * 0.9
+    val_count = percent - train_count
     f.seek(0)
 
     train_file = open(train, 'w+')
@@ -22,6 +23,8 @@ def split(origin, train, val):
     for i, line in enumerate(f):
         if i < train_count:
             train_file.write(line)
+        elif i > val_count:
+            break
         else:
             val_file.write(line)
 

@@ -132,7 +132,7 @@ class MovieDialogReader(DataReader):
                 if replace_token:
                     source.append(MovieDialogReader.REPLACEMENTS[token])
                 elif not dropout_token:
-                    token = self.add_noise_to_string(token, 5)
+                    # token = self.add_noise_to_string(token, 5)
                     source.append(token)
 
             yield source, target
